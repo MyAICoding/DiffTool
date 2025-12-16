@@ -476,23 +476,56 @@ class DiffApp:
         self.btn_export.config(state="normal")
         
         summary = result['summary']
-        self.lbl_info.config(text=f"完成! 总计: {summary['total']} | 差异: {summary['diff']} | 新增: {summary['added']} | 删除: {summary['deleted']}")
+        self.lbl_info.config(text=f"分析完成! 总计: {summary['total']} | 差异: {summary['diff']} | 新增: {summary['added']} | 删除: {summary['deleted']}")
 
-        for item in result["details"]:
-            # 格式化显示大小
-            sa = f"{item['size_a']:,}" if item['size_a'] > 0 else "-"
-            sb = f"{item['size_b']:,}" if item['size_b'] > 0 else "-"
-            sd = f"{item['size_diff']:+,}" if item['size_diff'] != 0 else "-"
+        # --- 优化开始：分批加载数据，防止卡死 ---
+        
+        # 1. 先清空表格
+        self.tree.delete(*self.tree.get_children())
+        
+        # 2. 准备数据
+        all_items = result["details"]
+        total_items = len(all_items)
+        batch_size = 50  # 每次加载 50 行
+        
+        # 3. 定义递归插入函数
+        def insert_batch(start_index):
+            end_index = min(start_index + batch_size, total_items)
             
-            # 插入数据，values 仅用于显示，真实数值如果需要排序可以存入 hidden tag 或者利用算法转换
-            self.tree.insert("", "end", values=(
-                item["path"], 
-                item["status"], 
-                item["similarity_str"], 
-                sa, 
-                sb, 
-                sd
-            ), tags=(item["type_category"],))
+            # 临时关闭屏幕更新以提高插入速度（可选，但对Treeview很有效）
+            # self.tree.pack_forget() 
+            
+            for i in range(start_index, end_index):
+                item = all_items[i]
+                sa = f"{item['size_a']:,}" if item['size_a'] > 0 else "-"
+                sb = f"{item['size_b']:,}" if item['size_b'] > 0 else "-"
+                sd = f"{item['size_diff']:+,}" if item['size_diff'] != 0 else "-"
+                
+                self.tree.insert("", "end", values=(
+                    item["path"], 
+                    item["status"], 
+                    item["similarity_str"], 
+                    sa, 
+                    sb, 
+                    sd
+                ), tags=(item["type_category"],))
+            
+            # self.tree.pack(side="left", fill="both", expand=True) # 如果上面隐藏了，这里要显示回来
+
+            # 更新一下界面上的提示，让用户知道正在渲染
+            self.lbl_info.config(text=f"正在渲染列表... {end_index}/{total_items}")
+
+            if end_index < total_items:
+                # 如果还没插完，10毫秒后继续插下一批
+                self.root.after(10, insert_batch, end_index)
+            else:
+                # 全部插完，恢复最终状态提示
+                self.lbl_info.config(text=f"就绪! 总计: {summary['total']} | 差异: {summary['diff']} | 新增: {summary['added']} | 删除: {summary['deleted']}")
+        
+        # 4. 启动第一批插入
+        if total_items > 0:
+            insert_batch(0)
+        # --- 优化结束 ---
 
     def _reset_ui(self):
         self.progress.stop()

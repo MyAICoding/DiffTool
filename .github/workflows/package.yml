@@ -44,7 +44,7 @@ jobs:
       - name: Build with PyInstaller (macOS)
         if: startsWith(matrix.os, 'macos')
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "DiffTool" diff_tool_pro.py
+          pyinstaller mac_build.spec
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4

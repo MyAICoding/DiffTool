@@ -15,10 +15,15 @@ jobs:
         include:
           - os: windows-latest
             TARGET_NAME: DiffTool_Windows.exe
-          - os: macos-latest    # Intel Mac (兼容性最好，M芯片也能通过Rosetta运行)
-            TARGET_NAME: DiffTool_Mac_Intel
-          - os: macos-14    # M1/M2/M3/M4 Mac (原生运行)
-            TARGET_NAME: DiffTool_Mac_Silicon
+            # Windows 不需要压缩，直接指向 exe
+            
+          # Intel Mac
+          - os: macos-latest
+            TARGET_NAME: DiffTool_Mac_Intel.zip  # <--- 必须带 .zip
+            
+          # M系列 Mac
+          - os: macos-14
+            TARGET_NAME: DiffTool_Mac_Silicon.zip # <--- 必须带 .zip
 
     steps:
       - name: Checkout code
@@ -52,11 +57,11 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: |
           cd dist
-          # 将 DiffTool.app 压缩为 DiffTool_Mac_xxx.zip
+          # 强制让 zip 命令生成的压缩包名字和 TARGET_NAME 完全一致
           zip -r ${{ matrix.TARGET_NAME }} DiffTool.app
-          # 移动回上一级目录以便上传逻辑统一
+          # 移动
           mv ${{ matrix.TARGET_NAME }} ../
-
+          
       # 4. Windows 额外步骤：重命名 exe
       - name: Rename Windows Exe
         if: matrix.os == 'windows-latest'

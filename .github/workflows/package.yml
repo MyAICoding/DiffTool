@@ -15,7 +15,7 @@ jobs:
         include:
           - os: windows-latest
             TARGET_NAME: DiffTool_Windows.exe
-          - os: macos-13    # Intel Mac (兼容性最好，M芯片也能通过Rosetta运行)
+          - os: macos-latest    # Intel Mac (兼容性最好，M芯片也能通过Rosetta运行)
             TARGET_NAME: DiffTool_Mac_Intel
           - os: macos-14    # M1/M2/M3/M4 Mac (原生运行)
             TARGET_NAME: DiffTool_Mac_Silicon

@@ -100,3 +100,5 @@ jobs:
           draft: false       # 是否设为草稿（建议先设为 true 自己检查后再发布，或者设为 false 直接发布）
           prerelease: false  # 是否为预发布版本
           generate_release_notes: true # 自动根据 commit 生成更新日志
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
